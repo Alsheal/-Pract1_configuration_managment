@@ -1,0 +1,7 @@
+# Проверка команд этапа 1
+ls
+ls "папка с пробелами"
+cd documents
+cd "папка с пробелами"
+unknown_command
+ls -l
