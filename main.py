@@ -13,7 +13,7 @@ class ShellGUI:
     def __init__(self, root, config):
         self.root = root
         self.config = config
-        self.emulator = ShellEmulator()
+        self.emulator = ShellEmulator(config["vfs_path"])
         self.closed = False
 
         self.username = self.get_username()

@@ -1,63 +1,56 @@
+
+from vfs import VirtualFileSystem
+
+
 class CommandHandler:
-    """
-    Обработчик команд эмулятора.
-    На этапе 1 ls и cd являются заглушками.
-    """
+    """Обработчик команд виртуальной оболочки."""
 
-    SUPPORTED_COMMANDS = {"ls", "cd", "exit"}
+    def __init__(self, vfs: VirtualFileSystem):
+        self.vfs = vfs
 
-    def execute(self, args):
-        """
-        Выполняет команду.
+    def execute(self, command, args):
+        """Выполняет команду и возвращает (результат, завершить)."""
 
-        args:
-            список, полученный от parser.py
+        try:
+            if command == "ls":
+                if len(args) > 1 or (args and args[0] != "-l"):
+                    return "Ошибка: использование ls [-l]", False
 
-        Возвращает:
-            (результат, should_exit)
-        """
+                return self.vfs.list_dir(
+                    long_format=bool(args)
+                ), False
 
-        if not args:
-            return "", False
+            if command == "pwd":
+                if args:
+                    return "Ошибка: pwd не принимает аргументы", False
 
-        command = args[0]
-        command_args = args[1:]
+                return self.vfs.get_current_path(), False
 
-        if command == "ls":
-            return self._ls(command_args), False
+            if command == "cd":
+                if len(args) > 1:
+                    return "Ошибка: использование cd [каталог]", False
 
-        if command == "cd":
-            return self._cd(command_args), False
+                path = args[0] if args else None
+                result = self.vfs.change_dir(path)
+                return f"Текущий каталог: {result}", False
 
-        if command == "exit":
-            return "", True
+            if command == "vfs-save":
+                if len(args) != 1:
+                    return "Ошибка: использование vfs-save <путь>", False
 
-        return f"Ошибка: неизвестная команда '{command}'", False
+                try:
+                    saved_path = self.vfs.save(args[0])
+                    return f"VFS успешно сохранена: {saved_path}", False
+                except (OSError, ValueError) as error:
+                    return f"Ошибка сохранения VFS: {error}", False
+                
+            if command == "exit":
+                if args:
+                    return "Ошибка: exit не принимает аргументы", False
 
-    def _ls(self, args):
-        """
-        Заглушка команды ls.
-        """
+                return "Эмулятор завершён", True
 
-        result = ["Команда: ls"]
+            return f"Ошибка: неизвестная команда '{command}'", False
 
-        if args:
-            result.append(f"Аргументы: {args}")
-        else:
-            result.append("Аргументы: []")
-
-        return "\n".join(result)
-
-    def _cd(self, args):
-        """
-        Заглушка команды cd.
-        """
-
-        result = ["Команда: cd"]
-
-        if args:
-            result.append(f"Аргументы: {args}")
-        else:
-            result.append("Аргументы: []")
-
-        return "\n".join(result)
+        except (OSError, ValueError) as error:
+            return f"Ошибка: {error}", False

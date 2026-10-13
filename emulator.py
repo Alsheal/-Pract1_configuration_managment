@@ -1,36 +1,33 @@
-from parser import parse_command
+
+from parser import parse_command_line
 from commands import CommandHandler
+from vfs import VirtualFileSystem
 
 
 class ShellEmulator:
-    """
-    Основная логика эмулятора.
-    """
+    """Выполняет команды виртуальной оболочки без создания GUI."""
 
-    def __init__(self):
-        self.command_handler = CommandHandler()
+    def __init__(self, vfs_path="vfs"):
+        self.vfs = VirtualFileSystem(vfs_path)
+        self.command_handler = CommandHandler(self.vfs)
+        print("Класс VFS:", type(self.vfs))
+        print("Метод save существует:", hasattr(self.vfs, "save"))
+        print("Файл класса VFS:", __import__("inspect").getfile(type(self.vfs)))
 
     def execute(self, command_line):
-        """
-        Обрабатывает одну строку, введенную пользователем.
-
-        Возвращает:
-            output - текст результата
-            should_exit - нужно ли закрыть приложение
-        """
+        """Возвращает (результат, нужно_завершить_эмулятор)."""
 
         command_line = command_line.strip()
 
-        # Пустая команда ничего не делает
         if not command_line:
             return "", False
 
         try:
-            args = parse_command(command_line)
+            command, args = parse_command_line(command_line)
         except ValueError as error:
             return str(error), False
 
-        if not args:
+        if command is None:
             return "", False
 
-        return self.command_handler.execute(args)
+        return self.command_handler.execute(command, args)

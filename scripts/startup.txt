@@ -1,7 +1,15 @@
-# Проверка команд этапа 1
+# Проверка виртуальной файловой системы
+pwd
 ls
-ls "папка с пробелами"
-cd documents
-cd "папка с пробелами"
-unknown_command
 ls -l
+cd documents
+pwd
+ls
+cd ..
+cd "папка с пробелами"
+ls
+cd /
+ls
+unknown_command
+cd ../../
+pwd
