@@ -104,7 +104,7 @@ shell-emulator/
 ├── README.md     # Документация проекта
 ├── .gitignore    # Исключения для Git
 │
-├── script/
+├── scripts/
 │   ├── run_windows.bat  # Скрипт запуска для Windows
 │   ├── run_unix.sh      # Скрипт запуска для Linux/macOS
 │   └── startup.txt      # Стартовый скрипт
@@ -117,7 +117,7 @@ shell-emulator/
         └── пример.txt
 ```
 
-Фактическое расположение файлов скриптов зависит от конфигурации проекта. В приведённой структуре используется каталог `script/`.
+Фактическое расположение файлов скриптов зависит от конфигурации проекта. В приведённой структуре используется каталог `scripts/`.
 
 ## `main.py`
 
@@ -282,13 +282,13 @@ py main.py
 Для указания каталога VFS и стартового скрипта используются параметры командной строки:
 
 ```bash
-python main.py --vfs "vfs" --script "script/startup.txt"
+python main.py --vfs "vfs" --script "scripts/startup.txt"
 ```
 
 В Windows:
 
 ```powershell
-py main.py --vfs "vfs" --script "script\startup.txt"
+py main.py --vfs "vfs" --script "scripts\startup.txt"
 ```
 
 Если в проекте используется каталог `scripts/`, путь к стартовому скрипту необходимо изменить соответствующим образом.
