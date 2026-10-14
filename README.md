@@ -282,13 +282,13 @@ py main.py
 Для указания каталога VFS и стартового скрипта используются параметры командной строки:
 
 ```bash
-python main.py --vfs "vfs" --script "script/startup.txt"
+python main.py --vfs "vfs" --script "scripts/startup.txt"
 ```
 
 В Windows:
 
 ```powershell
-py main.py --vfs "vfs" --script "script\startup.txt"
+py main.py --vfs "vfs" --script "scripts\startup.txt"
 ```
 
 Если в проекте используется каталог `scripts/`, путь к стартовому скрипту необходимо изменить соответствующим образом.
