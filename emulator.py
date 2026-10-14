@@ -1,4 +1,3 @@
-
 from parser import parse_command_line
 from commands import CommandHandler
 from vfs import VirtualFileSystem

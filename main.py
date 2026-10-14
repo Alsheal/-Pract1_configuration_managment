@@ -6,7 +6,7 @@ from tkinter import scrolledtext
 
 from config import parse_arguments
 from emulator import ShellEmulator
-from startup import execute_startup_script
+from startup import run_startup_script as execute_startup_script
 
 
 class ShellGUI:
@@ -34,20 +34,17 @@ class ShellGUI:
             f"Путь VFS: {self.config['vfs_path']}\n"
         )
 
-        if self.config["script_path"]:
-            self.write_output(
-                f"Стартовый скрипт: "
-                f"{self.config['script_path']}\n"
-            )
+        script_path = self.config.get("script_path")
+        if script_path:
+            self.write_output(f"Стартовый скрипт: {script_path}\n")
 
         self.write_output(
-            "Доступные команды: ls, cd, exit.\n\n"
+            "Доступные команды: ls, ls -l, pwd, cd, vfs-save, exit.\n"
         )
         self.write_prompt()
 
-        # Запускаем скрипт после создания окна.
-        if self.config["script_path"]:
-            self.root.after(100, self.run_startup_script)
+        if script_path:
+            self.root.after(100, self.execute_startup_script)
 
     @staticmethod
     def get_username():
@@ -101,43 +98,62 @@ class ShellGUI:
             padx=(5, 0)
         )
 
-        self.command_entry.bind(
-            "<Return>",
-            self.execute_command
-        )
+        self.command_entry.bind("<Return>", self.execute_command)
         self.command_entry.focus_set()
 
     def write_output(self, text):
+        if self.closed:
+            return
+
         self.output.config(state=tk.NORMAL)
-        self.output.insert(tk.END, text)
+        self.output.insert(tk.END, str(text))
         self.output.config(state=tk.DISABLED)
         self.output.see(tk.END)
 
     def write_prompt(self):
-        self.write_output("$ ")
+        if not self.closed:
+            self.write_output("$ ")
 
-    def show_dialog(self, command, output):
-        """Показывает команду и результат в окне."""
-
+    def show_command_result(self, command, output):
         self.write_output(command + "\n")
 
         if output:
-            self.write_output(output + "\n")
+            self.write_output(str(output) + "\n")
 
         self.write_prompt()
 
-    def run_startup_script(self):
-        script_path = self.config["script_path"]
+    def execute_startup_script(self):
+        """Выполняет команды из стартового скрипта."""
+
+        script_path = self.config.get("script_path")
+        if not script_path or self.closed:
+            return
+
+        def execute_line(command):
+            if self.closed:
+                return True
+
+            output, should_exit = self.emulator.execute(command)
+            self.show_command_result(command, output)
+            return should_exit
+
+        def write_script_output(message):
+            self.write_output(str(message) + "\n")
 
         try:
             should_exit = execute_startup_script(
                 script_path,
-                self.emulator,
-                self.show_dialog
+                execute_line,
+                write_script_output
             )
         except (OSError, UnicodeError) as error:
             self.write_output(
-                f"\nОшибка стартового скрипта: {error}\n"
+                f"\nОшибка чтения стартового скрипта: {error}\n"
+            )
+            return
+        except Exception as error:
+            self.write_output(
+                f"\nОшибка выполнения стартового скрипта: {error}\n"
             )
             return
 
@@ -145,15 +161,18 @@ class ShellGUI:
             self.close()
 
     def execute_command(self, event=None):
-        command_line = self.command_entry.get()
-        self.command_entry.delete(0, tk.END)
-
-        if not command_line.strip():
-            self.write_output("\n$ ")
+        if self.closed:
             return "break"
 
-        output, should_exit = self.emulator.execute(command_line)
-        self.show_dialog(command_line, output)
+        command = self.command_entry.get()
+        self.command_entry.delete(0, tk.END)
+
+        if not command.strip():
+            self.write_prompt()
+            return "break"
+
+        output, should_exit = self.emulator.execute(command)
+        self.show_command_result(command, output)
 
         if should_exit:
             self.close()
@@ -169,7 +188,6 @@ class ShellGUI:
 def main():
     config = parse_arguments()
 
-    # Диагностика параметров выводится в консоль.
     print("=== Параметры запуска эмулятора ===")
     print(f"VFS path: {config['vfs_path']}")
     print(f"Startup script: {config['script_path']}")
@@ -177,7 +195,6 @@ def main():
     print(f"Working directory: {os.getcwd()}")
     print(f"Username: {ShellGUI.get_username()}")
     print(f"Hostname: {socket.gethostname()}")
-    print("===================================")
 
     root = tk.Tk()
     ShellGUI(root, config)
